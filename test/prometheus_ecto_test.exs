@@ -3,15 +3,22 @@ defmodule PrometheusEctoTest do
 
   require Prometheus.Registry
 
-  alias Prometheus.EctoInstrumenter.TestRepo
-  alias Prometheus.EctoInstrumenter.TestSchema
-
   setup do
     Prometheus.Registry.clear(:default)
     Prometheus.Registry.clear(:qwe)
     TestEctoInstrumenter.setup()
     TestEctoInstrumenterWithConfig.setup()
+
+    :telemetry.attach(
+      "test-handler",
+      [:test_repo, :query],
+      &TestEctoInstrumenter.handle_event/4,
+      %{}
+    )
+
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(TestRepo)
+
+    Ecto.Adapters.SQL.Sandbox.mode(TestRepo, {:shared, self()})
   end
 
   use Prometheus.Metric

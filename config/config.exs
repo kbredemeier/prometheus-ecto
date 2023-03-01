@@ -1,30 +1,25 @@
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
-use Mix.Config
+import Config
 
-# This configuration is loaded before any dependency and is restricted
-# to this project. If another project depends on this project, this
-# file won't be loaded nor affect the parent project. For this reason,
-# if you want to provide default values for your application for
-# 3rd-party users, it should be done in your "mix.exs" file.
+if config_env() == :test do
+  config :prometheus_ecto, ecto_repos: [TestRepo]
 
-# You can configure for your application as:
-#
-#     config :prometheus_ecto, key: :value
-#
-# And access this configuration in your application as:
-#
-#     Application.get_env(:prometheus_ecto, :key)
-#
-# Or configure a 3rd-party app:
-#
-#     config :logger, level: :info
-#
+  config :prometheus_ecto, TestRepo,
+    adapter: Ecto.Adapters.Postgres,
+    loggers: [Ecto.LogEntry, TestEctoInstrumenter, TestEctoInstrumenterWithConfig],
+    pool: Ecto.Adapters.SQL.Sandbox,
+    url:
+      "ecto://" <>
+        System.get_env(
+          "DB_URL",
+          "postgres:postgres@localhost:5432/prometheus_ecto_test?pool_size=10"
+        )
 
-# It is also possible to import configuration files, relative to this
-# directory. For example, you can emulate configuration per environment
-# by uncommenting the line below and defining dev.exs, test.exs and such.
-# Configuration from the imported file will override the ones defined
-# here (which is why it is important to import them last).
-#
-#     import_config "#{Mix.env}.exs"
+  config :prometheus,
+         TestEctoInstrumenterWithConfig,
+         labels: [:custom_label],
+         registry: :qwe,
+         stages: [:queue, :query],
+         counter: true,
+         query_duration_buckets: [100, 200],
+         duration_unit: :seconds
+end
