@@ -1,7 +1,7 @@
 [
   inputs: [
-    "lib/**/*.{ex,exs}",
-    "test/**/*.{ex,exs}",
-    "mix.exs"
+    "{mix,.formatter}.exs",
+    "{config,lib,test}/**/*.{ex,exs}",
+    "priv/test_repo/migrations/*.exs"
   ]
 ]
